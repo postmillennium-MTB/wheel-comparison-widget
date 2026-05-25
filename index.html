@@ -277,32 +277,41 @@ const HUBS_157 = [
 
 const ST = { wheel148: '29', wheel157: '29', hub148: 'h6', hub157: 'h7', tDS: 100 };
 const WHEEL_ERDS = { '26': 534, '27.5': 559, '29': 600, '32': 667 };
-const WHEEL_FACTORS = { '26': 1.14, '27.5': 1.08, '29': 1.00, '32': 0.92 };
 
 function spokeEA(d_mm) { return 210e9 * Math.PI * Math.pow(d_mm/2/1000, 2); }
 
-function calc(dds, dnds, pds, pnds, spkDS, spkNDS) {
+// ERD passed in directly — no shared global, no post-calc scaling multiplier
+function calc(erd_mm, dds, dnds, pds, pnds, spkDS, spkNDS) {
   const EA_ds = spokeEA(spkDS), EA_nds = spokeEA(spkNDS);
-  const EIL=50, EIR=150, GJ=40, Ns=16, Re=ST.erd/2/1000;
-  const Rr = ST.erd/2/1000 + 0.011;
+  const EIL=50, EIR=150, GJ=40, Ns=16;
+  const Re = erd_mm / 2 / 1000;
+  const Rr = Re + 0.011;                       // Rr scaling fix (Ford §3.2)
   const coeff = Math.PI / Math.pow(Rr, 3);
-  const cos_x = Math.cos(4*Math.PI*3/Ns), T = ST.tDS * 9.81;
+  const cos_x = Math.cos(4*Math.PI*3/Ns);      // 3-cross spoke angle
+  const T = ST.tDS * 9.81;
   const Rfa = pds/2/1000, Rfb = pnds/2/1000, da = dds/1000, db = dnds/1000;
-  const r2a = Re*Re + Rfa*Rfa - 2*Re*Rfa*cos_x, r2b = Re*Re + Rfb*Rfb - 2*Re*Rfb*cos_x;
+  const r2a = Re*Re + Rfa*Rfa - 2*Re*Rfa*cos_x;
+  const r2b = Re*Re + Rfb*Rfb - 2*Re*Rfb*cos_x;
   const La = Math.sqrt(da*da+r2a), Lb = Math.sqrt(db*db+r2b);
-  const sa = da/La, sb = db/Lb, ratio = sa/sb, Tnds = T*ratio;
+  const sa = da/La, sb = db/Lb;
+  // tension ratio = sin(α_DS)/sin(α_NDS) = (d_DS/L_DS)/(d_NDS/L_NDS)
+  const ratio = sa/sb, Tnds = T*ratio;
   const Ka = EA_ds/La, Kb = EA_nds/Lb;
   const kla = T/La + Ka*sa*sa, klb = Tnds/Lb + Kb*sb*sb;
   const kra = T/La + Ka*(r2a/(da*da+r2a)), krb = Tnds/Lb + Kb*(r2b/(db*db+r2b));
   const Ksl = (Ns/2)*(kla+klb), Ksr = (Ns/2)*(kra+krb);
+  // Mode sum: m=1..Ns/2 covers all independent modes for Ns spokes
   let Cl = 1/(2*Ksl), Cr = 1/(2*Ksr);
-  for(let m=1; m<=Ns; m++) {
+  for(let m=1; m<=Ns/2; m++) {
     const q = m*m;
     Cl += 1/(Ksl + coeff*(EIL*(q-1)*(q-1)+GJ*(q-1)));
     Cr += 1/(Ksr + coeff*EIR*(q-1)*(q-1));
   }
   const Kl = 1/Cl/1000, Kr = 1/Cr/1000;
-  const Fl = Tnds*Kl*1e3/(EA_nds*sb/Lb), Fr = Tnds*Kr*1e3/(EA_nds/Lb);
+  // F_lat = T_NDS × K_lat × L_NDS / (EA_NDS × d_NDS)  [Ford eq. 4.x]
+  const Fl = Tnds*Kl*1e3/(EA_nds*sb/Lb);
+  // F_rad = T_NDS × K_rad × L_NDS / EA_NDS
+  const Fr = Tnds*Kr*1e3/(EA_nds/Lb);
   return{ratio:ratio*100,tnds:Tnds/9.81,Kl,Kr,Fl:Fl/9.81,Fr:Fr/9.81};
 }
 
@@ -319,7 +328,6 @@ function setWheel(side, w) {
   ['26','27.5','29','32'].forEach(sz => {
     document.getElementById(`w${side}-${sz.replace('.','')}`).classList.toggle('on', sz===w);
   });
-  ST.erd = WHEEL_ERDS[w];
   refresh();
 }
 
@@ -338,15 +346,13 @@ function refresh() {
   const spkDS157 = +document.getElementById('spk157ds').value;
   const spkNDS157 = +document.getElementById('spk157nds').value;
   
-  ST.erd = WHEEL_ERDS[ST.wheel148];
-  const f = WHEEL_FACTORS[ST.wheel148];
-  const m148 = calc(hub148.ds, hub148.nds, hub148.pds, hub148.pnds, spkDS148, spkNDS148);
-  const km148 = {ratio:m148.ratio,flat:m148.Fl*f,frad:m148.Fr*f,klat:m148.Kl*f};
+  const erd148 = WHEEL_ERDS[ST.wheel148];
+  const erd157 = WHEEL_ERDS[ST.wheel157];
+  const m148 = calc(erd148, hub148.ds, hub148.nds, hub148.pds, hub148.pnds, spkDS148, spkNDS148);
+  const km148 = {ratio:m148.ratio, flat:m148.Fl, frad:m148.Fr, klat:m148.Kl};
   
-  ST.erd = WHEEL_ERDS[ST.wheel157];
-  const f2 = WHEEL_FACTORS[ST.wheel157];
-  const m157 = calc(hub157.ds, hub157.nds, hub157.pds, hub157.pnds, spkDS157, spkNDS157);
-  const km157 = {ratio:m157.ratio,flat:m157.Fl*f2,frad:m157.Fr*f2,klat:m157.Kl*f2};
+  const m157 = calc(erd157, hub157.ds, hub157.nds, hub157.pds, hub157.pnds, spkDS157, spkNDS157);
+  const km157 = {ratio:m157.ratio, flat:m157.Fl, frad:m157.Fr, klat:m157.Kl};
   
   // Update side panels
   document.getElementById('hub148-label').textContent = `${hub148.name} · ${ST.wheel148}`;
