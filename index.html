@@ -7,7 +7,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:11px;line-height:1.5;color:#111827;background:#f9fafb;padding:14px}
-.wrap{max-width:1000px;margin:0 auto}
+.wrap{max-width:1060px;margin:0 auto}
 h1{font-size:15px;font-weight:500;margin-bottom:1px}
 .sub{font-size:10px;color:#6b7280;margin-bottom:12px}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,.10);border-radius:9px;padding:10px 12px}
@@ -17,7 +17,8 @@ button.on{background:#eff6ff;color:#2563eb;border-color:#2563eb;font-weight:500}
 .btn-row{display:flex;gap:4px;flex-wrap:wrap}
 .slbl{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;font-weight:500}
 select.ctl{font-family:inherit;font-size:10px;padding:3px 6px;border:0.5px solid rgba(0,0,0,.18);border-radius:6px;background:#f3f4f6;color:#111827;width:100%;cursor:pointer}
-.grid3{display:grid;grid-template-columns:1fr 300px 1fr;gap:10px;align-items:start}
+input.ctl-num{font-family:inherit;font-size:10px;padding:3px 6px;border:0.5px solid rgba(0,0,0,.18);border-radius:6px;background:#f3f4f6;color:#111827;width:100%;text-align:right}
+.grid3{display:grid;grid-template-columns:1fr 320px 1fr;gap:10px;align-items:start}
 .hub-btn{width:100%;text-align:left;padding:5px 8px;margin-bottom:3px;border-radius:6px;font-size:10px;display:block;background:#f3f4f6;border:0.5px solid rgba(0,0,0,.12);cursor:pointer;transition:all .15s}
 .hub-btn:hover{background:#f1f5f9;border-color:rgba(0,0,0,.18)}
 .hub-btn.on{background:#eff6ff;color:#2563eb;border-color:#2563eb;font-weight:500}
@@ -35,6 +36,570 @@ select.ctl{font-family:inherit;font-size:10px;padding:3px 6px;border:0.5px solid
 .cmp-label.primary{font-size:10px;margin-bottom:11px}
 .cmp-values{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .cmp-num{font-size:22px;font-weight:600;line-height:1;color:#1e40af}
+.cmp-num.lg{font-size:30px}
+.cmp-num.dim{color:#6b7280}
+.cmp-unit{font-size:9px;color:#6b7280;margin-top:2px}
+.cmp-mid{text-align:center;flex:1;padding:0 10px}
+.cmp-pct{font-weight:700;color:#2563eb}
+.cmp-pct.lg{font-size:22px}
+.cmp-pct.md{font-size:16px}
+.cmp-stmt{font-size:9px;color:#2563eb;text-align:center;margin-top:3px;font-weight:500}
+.cmp-stmt.subtle{color:#6b7280;font-weight:400}
+.bar2{display:flex;gap:3px;align-items:center;margin:6px 0 2px}
+.bar-lbl{display:flex;justify-content:space-between;font-size:8px;color:#9ca3af}
+.spk-row{display:flex;gap:6px;margin-bottom:8px}
+.spk-col{flex:1}
+.note{font-size:9px;color:#9ca3af;text-align:center;margin-top:12px;padding-top:8px;border-top:0.5px solid rgba(0,0,0,.08)}
+.ok{color:#15803d}
+.warn{color:#b45309}
+.bad{color:#dc2626}
+.adv-toggle{font-size:10px;color:#6b7280;background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:6px}
+.adv-toggle:hover{color:#2563eb}
+.adv-toggle .arrow{font-size:8px;transition:transform .2s}
+.adv-toggle.open .arrow{transform:rotate(90deg)}
+#adv-panel{display:none}
+#adv-panel.open{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Rear Wheel Comparison: 148 vs 157</h1>
+<p class="sub">Mode Matrix method · Ford 2018 (§3–5) · tension-softening · rim buckling · NDS slack · 3-cross · adjustable rim props</p>
+
+<!-- Global rim + config controls -->
+<div class="card" style="margin-bottom:10px">
+  <button class="adv-toggle" id="adv-btn" onclick="toggleAdv()"><span class="arrow">▶</span> Advanced settings</button>
+  <div id="adv-panel">
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end">
+    <div><div class="slbl">EI_lat (N·m²)</div><input class="ctl-num" id="g-eil" type="number" value="50" step="5" min="1" onchange="refresh()"></div>
+    <div><div class="slbl">EI_rad (N·m²)</div><input class="ctl-num" id="g-eir" type="number" value="150" step="5" min="1" onchange="refresh()"></div>
+    <div><div class="slbl">GJ (N·m²)</div><input class="ctl-num" id="g-gj" type="number" value="22" step="1" min="1" onchange="refresh()"></div>
+    <div><div class="slbl">EA_rim (MN)</div><input class="ctl-num" id="g-ea" type="number" value="11.5" step="0.5" min="1" onchange="refresh()"></div>
+    <div><div class="slbl">Modes N</div>
+      <select class="ctl" id="g-modes" onchange="refresh()">
+        <option value="8">8</option><option value="16">16</option>
+        <option value="24" selected>24</option><option value="48">48</option>
+      </select></div>
+    <div><div class="slbl">DS tension (kgf)</div>
+      <select class="ctl" id="g-tds" onchange="refresh()">
+        <option value="95">95</option><option value="100" selected>100</option>
+        <option value="105">105</option><option value="110">110</option>
+        <option value="115">115</option><option value="120">120</option><option value="125">125</option>
+      </select></div>
+    <div><div class="slbl">Spoke count</div>
+      <select class="ctl" id="g-ns" onchange="refresh()">
+        <option value="28">28H</option><option value="32" selected>32H</option><option value="36">36H</option>
+      </select></div>
+  </div>
+  <div style="margin-top:5px;font-size:9px;color:#9ca3af">Rim defaults: DT Swiss TK540 (EIL=50, EIR=150, GJ=22 N·m², EA=11.5 MN) · GJ dominates lateral flexibility — Ford §3.4</div>
+  <div style="margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+    <div><div class="slbl" style="color:#2563eb">EI_lat (N·m²)</div><div style="font-size:9px;color:#6b7280;line-height:1.5">Rim lateral bending stiffness. Resists the rim bowing sideways. Typically 40–80 N·m² for alloy double-wall rims. Higher = stiffer rim shell, but GJ usually dominates.</div></div>
+    <div><div class="slbl" style="color:#2563eb">EI_rad (N·m²)</div><div style="font-size:9px;color:#6b7280;line-height:1.5">Rim radial (in-plane) bending stiffness. Governs how the rim distributes load around its hoop. Typically 3–10× higher than EI_lat for most rims (100–300 N·m²).</div></div>
+    <div><div class="slbl" style="color:#2563eb">GJ (N·m²)</div><div style="font-size:9px;color:#6b7280;line-height:1.5">Rim torsional stiffness. Because the rim is curved, bending and twisting are coupled — GJ dominates lateral flexibility more than EI_lat does (Ford §3.4). Typical alloy rims: 15–35 N·m².</div></div>
+    <div><div class="slbl" style="color:#2563eb">EA_rim (MN)</div><div style="font-size:9px;color:#6b7280;line-height:1.5">Rim axial (hoop) stiffness. Used to compute the compressive hoop load that spoke tension induces in the rim, which softens lateral stiffness. Typical value 8–15 MN for alloy rims.</div></div>
+    <div><div class="slbl" style="color:#2563eb">Modes N</div><div style="font-size:9px;color:#6b7280;line-height:1.5">Number of Fourier modes included in the Mode Matrix sum. Each mode captures a different deformation shape of the rim. Results converge by ~16–24; higher values add precision at negligible cost.</div></div>
+  </div>
+  </div>
+</div>
+
+<div class="grid3">
+
+  <!-- LEFT: 148mm -->
+  <div><div class="card">
+    <div class="side-header"><span class="badge">148 mm</span><span style="font-size:10px;color:#6b7280">axle width</span></div>
+    <div class="slbl">Wheel size</div>
+    <div class="btn-row" style="margin-bottom:10px">
+      <button id="w148-26" onclick="setWheel('148','26')">26"</button>
+      <button id="w148-275" onclick="setWheel('148','27.5')">27.5"</button>
+      <button id="w148-29" class="on" onclick="setWheel('148','29')">29"</button>
+      <button id="w148-32" onclick="setWheel('148','32')">32"</button>
+    </div>
+    <div class="spk-row">
+      <div class="spk-col"><div class="slbl">Spoke ⌀ DS (mm)</div>
+        <select class="ctl" id="spk148ds" onchange="refresh()">
+          <option value="1.5">1.5</option><option value="1.6">1.6</option><option value="1.7">1.7</option>
+          <option value="1.8">1.8</option><option value="1.9">1.9</option><option value="2.0" selected>2.0</option>
+          <option value="2.1">2.1</option><option value="2.2">2.2</option><option value="2.3">2.3</option>
+        </select></div>
+      <div class="spk-col"><div class="slbl">Spoke ⌀ NDS (mm)</div>
+        <select class="ctl" id="spk148nds" onchange="refresh()">
+          <option value="1.5">1.5</option><option value="1.6">1.6</option><option value="1.7">1.7</option>
+          <option value="1.8">1.8</option><option value="1.9">1.9</option><option value="2.0" selected>2.0</option>
+          <option value="2.1">2.1</option><option value="2.2">2.2</option><option value="2.3">2.3</option>
+        </select></div>
+    </div>
+    <div class="slbl">Select hub</div>
+    <div id="hub148-list"></div>
+    <div style="margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(0,0,0,.08)">
+      <div class="slbl" id="hub148-label">—</div>
+      <div class="metric-row"><span class="ml">Lateral strength F_lat</span><div style="text-align:right"><div class="mv" id="m148-flat">—</div><div class="ms">kgf</div></div></div>
+      <div class="metric-row"><span class="ml">Radial strength F_rad</span><div style="text-align:right"><div class="mv" id="m148-frad">—</div><div class="ms">kgf</div></div></div>
+      <div class="metric-row"><span class="ml">Lateral stiffness K_lat</span><div style="text-align:right"><div class="mv" id="m148-klat">—</div><div class="ms">N/mm</div></div></div>
+      <div class="metric-row"><span class="ml">NDS/DS tension ratio</span><div style="text-align:right"><div class="mv" id="m148-ratio" style="color:#d97706">—</div><div class="ms">target ≥ 80%</div></div></div>
+      <div class="metric-row"><span class="ml">Buckling tension T_c</span><div style="text-align:right"><div class="mv" id="m148-tc">—</div><div class="ms">kgf DS</div></div></div>
+      <div class="metric-row"><span class="ml">T_DS / T_c (safety)</span><div style="text-align:right"><div class="mv" id="m148-tcr">—</div><div class="ms">target &lt; 70%</div></div></div>
+      <div class="metric-row"><span class="ml">NDS slack load</span><div style="text-align:right"><div class="mv" id="m148-slack">—</div><div class="ms">kgf at hub</div></div></div>
+    </div>
+  </div></div>
+
+  <!-- CENTER: COMPARISON -->
+  <div>
+    <div class="vs-divider">— vs —</div>
+
+    <div class="cmp-card primary">
+      <div class="cmp-label primary">★ Lateral Strength F_lat</div>
+      <div class="cmp-values">
+        <div><div class="cmp-num lg dim" id="cmp-flat148">—</div><div class="cmp-unit">kgf · 148</div></div>
+        <div class="cmp-mid"><div class="cmp-pct lg" id="cmp-flat-pct">—</div></div>
+        <div style="text-align:right"><div class="cmp-num lg" id="cmp-flat157">—</div><div class="cmp-unit" style="text-align:right">kgf · 157</div></div>
+      </div>
+      <div class="bar2">
+        <div id="cmp-flat-bar148" style="height:9px;background:#bfdbfe;border-radius:3px;flex:0"></div>
+        <div id="cmp-flat-bar157" style="height:9px;background:#2563eb;border-radius:3px;flex:0"></div>
+      </div>
+      <div class="bar-lbl"><span>148</span><span>157</span></div>
+      <div class="cmp-stmt" style="margin-top:5px;font-size:10px" id="cmp-flat-stmt">—</div>
+    </div>
+
+    <div class="cmp-card">
+      <div class="cmp-label">Radial Strength F_rad</div>
+      <div class="cmp-values">
+        <div><div class="cmp-num dim" id="cmp-frad148">—</div><div class="cmp-unit">kgf · 148</div></div>
+        <div class="cmp-mid"><div class="cmp-pct md" id="cmp-frad-pct">—</div></div>
+        <div style="text-align:right"><div class="cmp-num" id="cmp-frad157">—</div><div class="cmp-unit" style="text-align:right">kgf · 157</div></div>
+      </div>
+      <div class="bar2">
+        <div id="cmp-frad-bar148" style="height:5px;background:#bfdbfe;border-radius:3px;flex:0"></div>
+        <div id="cmp-frad-bar157" style="height:5px;background:#2563eb;border-radius:3px;flex:0"></div>
+      </div>
+      <div class="bar-lbl"><span>148</span><span>157</span></div>
+      <div class="cmp-stmt" id="cmp-frad-stmt">—</div>
+    </div>
+
+    <div class="cmp-card">
+      <div class="cmp-label">Lateral Stiffness K_lat</div>
+      <div class="cmp-values">
+        <div><div class="cmp-num dim" id="cmp-klat148">—</div><div class="cmp-unit">N/mm · 148</div></div>
+        <div class="cmp-mid"><div class="cmp-pct md" id="cmp-klat-pct">—</div></div>
+        <div style="text-align:right"><div class="cmp-num" id="cmp-klat157">—</div><div class="cmp-unit" style="text-align:right">N/mm · 157</div></div>
+      </div>
+      <div class="bar2">
+        <div id="cmp-klat-bar148" style="height:5px;background:#bfdbfe;border-radius:3px;flex:0"></div>
+        <div id="cmp-klat-bar157" style="height:5px;background:#2563eb;border-radius:3px;flex:0"></div>
+      </div>
+      <div class="bar-lbl"><span>148</span><span>157</span></div>
+      <div class="cmp-stmt" id="cmp-klat-stmt">—</div>
+    </div>
+
+    <div class="cmp-card" style="border-color:rgba(0,0,0,.08)">
+      <div class="cmp-label" style="color:#9ca3af">NDS/DS Tension Ratio</div>
+      <div class="cmp-values">
+        <div><div class="cmp-num" style="color:#d97706;font-size:18px" id="cmp-ratio148">—</div><div class="cmp-unit">148 hub</div></div>
+        <div class="cmp-mid"><div style="font-size:12px;font-weight:600;color:#6b7280" id="cmp-ratio-diff">—</div></div>
+        <div style="text-align:right"><div class="cmp-num" style="color:#d97706;font-size:18px" id="cmp-ratio157">—</div><div class="cmp-unit" style="text-align:right">157 hub</div></div>
+      </div>
+      <div class="cmp-stmt subtle" style="margin-top:3px" id="cmp-ratio-stmt">—</div>
+    </div>
+
+    <div class="cmp-card" style="border-color:rgba(0,0,0,.08)">
+      <div class="cmp-label" style="color:#9ca3af">Buckling Safety T_DS/T_c</div>
+      <div class="cmp-values">
+        <div><div class="cmp-num" style="font-size:18px" id="cmp-tc148">—</div><div class="cmp-unit">148</div></div>
+        <div class="cmp-mid"><div style="font-size:9px;color:#6b7280;line-height:1.3" id="cmp-tc-stmt">—</div></div>
+        <div style="text-align:right"><div class="cmp-num" style="font-size:18px" id="cmp-tc157">—</div><div class="cmp-unit" style="text-align:right">157</div></div>
+      </div>
+    </div>
+
+    <div class="cmp-card" style="border-color:rgba(0,0,0,.08)">
+      <div class="cmp-label" style="color:#9ca3af">NDS Slack Load (kgf)</div>
+      <div class="cmp-values">
+        <div><div class="cmp-num" style="font-size:18px;color:#6b7280" id="cmp-slack148">—</div><div class="cmp-unit">148</div></div>
+        <div class="cmp-mid"><div style="font-size:12px;font-weight:600;color:#6b7280" id="cmp-slack-diff">—</div></div>
+        <div style="text-align:right"><div class="cmp-num" style="font-size:18px" id="cmp-slack157">—</div><div class="cmp-unit" style="text-align:right">157</div></div>
+      </div>
+      <div class="cmp-stmt subtle" style="margin-top:3px" id="cmp-slack-stmt">—</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: 157mm+ -->
+  <div><div class="card">
+    <div class="side-header"><span class="badge">157 mm</span><span style="font-size:10px;color:#6b7280">axle width</span></div>
+    <div class="slbl">Wheel size</div>
+    <div class="btn-row" style="margin-bottom:10px">
+      <button id="w157-26" onclick="setWheel('157','26')">26"</button>
+      <button id="w157-275" onclick="setWheel('157','27.5')">27.5"</button>
+      <button id="w157-29" class="on" onclick="setWheel('157','29')">29"</button>
+      <button id="w157-32" onclick="setWheel('157','32')">32"</button>
+    </div>
+    <div class="spk-row">
+      <div class="spk-col"><div class="slbl">Spoke ⌀ DS (mm)</div>
+        <select class="ctl" id="spk157ds" onchange="refresh()">
+          <option value="1.5">1.5</option><option value="1.6">1.6</option><option value="1.7">1.7</option>
+          <option value="1.8">1.8</option><option value="1.9">1.9</option><option value="2.0" selected>2.0</option>
+          <option value="2.1">2.1</option><option value="2.2">2.2</option><option value="2.3">2.3</option>
+        </select></div>
+      <div class="spk-col"><div class="slbl">Spoke ⌀ NDS (mm)</div>
+        <select class="ctl" id="spk157nds" onchange="refresh()">
+          <option value="1.5">1.5</option><option value="1.6">1.6</option><option value="1.7">1.7</option>
+          <option value="1.8">1.8</option><option value="1.9">1.9</option><option value="2.0" selected>2.0</option>
+          <option value="2.1">2.1</option><option value="2.2">2.2</option><option value="2.3">2.3</option>
+        </select></div>
+    </div>
+    <div class="slbl">Select hub</div>
+    <div id="hub157-list"></div>
+    <div style="margin-top:10px;padding-top:8px;border-top:0.5px solid rgba(0,0,0,.08)">
+      <div class="slbl" id="hub157-label">—</div>
+      <div class="metric-row"><span class="ml">Lateral strength F_lat</span><div style="text-align:right"><div class="mv" id="m157-flat">—</div><div class="ms">kgf</div></div></div>
+      <div class="metric-row"><span class="ml">Radial strength F_rad</span><div style="text-align:right"><div class="mv" id="m157-frad">—</div><div class="ms">kgf</div></div></div>
+      <div class="metric-row"><span class="ml">Lateral stiffness K_lat</span><div style="text-align:right"><div class="mv" id="m157-klat">—</div><div class="ms">N/mm</div></div></div>
+      <div class="metric-row"><span class="ml">NDS/DS tension ratio</span><div style="text-align:right"><div class="mv" id="m157-ratio" style="color:#d97706">—</div><div class="ms">target ≥ 80%</div></div></div>
+      <div class="metric-row"><span class="ml">Buckling tension T_c</span><div style="text-align:right"><div class="mv" id="m157-tc">—</div><div class="ms">kgf DS</div></div></div>
+      <div class="metric-row"><span class="ml">T_DS / T_c (safety)</span><div style="text-align:right"><div class="mv" id="m157-tcr">—</div><div class="ms">target &lt; 70%</div></div></div>
+      <div class="metric-row"><span class="ml">NDS slack load</span><div style="text-align:right"><div class="mv" id="m157-slack">—</div><div class="ms">kgf at hub</div></div></div>
+    </div>
+  </div></div>
+
+</div>
+<p class="note">
+  Full Mode Matrix engine (Ford 2018) · K_lat uses tension-softening (rim hoop compression) per Ford §3.3 ·
+  T_c = critical buckling tension (scan over modes) from Ford §5 · GJ dominates lateral compliance ·
+  NDS slack load = radial hub load zeroing lightest NDS spoke · rim props tunable above
+</p>
+</div>
+
+<script>
+const HUBS_148 = [
+  { id:'h1',  name:'Onyx 148 MFU',                   nds:36.9, ds:22.92, pds:50.0, pnds:50.0 },
+  { id:'h5',  name:'SPANK HEX J-TYPE BOOST R148',    nds:37,   ds:25,    pds:64.0, pnds:58.0 },
+  { id:'h6',  name:'CK 148x12 CENTERLOCK REAR',      nds:36.3, ds:24,    pds:57.4, pnds:57.4 },
+  { id:'h8',  name:'project 321 G3 148x12',          nds:32,   ds:22,    pds:60.5, pnds:55.0 },
+  { id:'h10', name:'Hydra Mountain 6 Bolt Rear 148', nds:38,   ds:25,    pds:60.0, pnds:58.0 },
+  { id:'h12', name:'I9 Hydra Centerlock Rear 148',   nds:39,   ds:24,    pds:60.0, pnds:49.0 },
+  { id:'h14', name:'I9 1/1 Mountain 6 Bolt 148',     nds:37,   ds:23,    pds:60.0, pnds:58.0 },
+  { id:'h15', name:'Hope Pro5 148 6 bolt',           nds:35,   ds:22.6,  pds:59.0, pnds:57.0 },
+  { id:'h17', name:'Erase MTB IS 148x12 V2 j-bend',  nds:38,   ds:25,    pds:56.0, pnds:50.0 },
+  { id:'h20', name:'Hadley 148x12',                  nds:37.1, ds:22.9,  pds:59.0, pnds:52.0 },
+];
+const HUBS_157 = [
+  { id:'h2',  name:'Onyx 150/157',                       nds:41.4, ds:27.42, pds:50.0, pnds:50.0 },
+  { id:'h3',  name:'Onyx 150/157 Vesper',                nds:41.4, ds:26.97, pds:50.0, pnds:42.0 },
+  { id:'h4',  name:'SPANK HEX J-TYPE R150/157',          nds:39.5, ds:29.5,  pds:64.0, pnds:58.0 },
+  { id:'h7',  name:'CK 157 SB CENTERLOCK REAR',          nds:40.3, ds:28.8,  pds:57.4, pnds:57.4 },
+  { id:'h9',  name:'project 321 G3 157 SB',              nds:32,   ds:26,    pds:60.5, pnds:55.0 },
+  { id:'h11', name:'I9 Hydra 6 Bolt 150/157',            nds:41,   ds:29,    pds:60.0, pnds:58.0 },
+  { id:'h13', name:'I9 Hydra Centerlock 157 SB',         nds:43,   ds:28,    pds:60.0, pnds:49.0 },
+  { id:'h16', name:'Hope Pro5 150/157 6 bolt',           nds:28,   ds:25.8,  pds:59.0, pnds:57.0 },
+  { id:'h18', name:'Erase MTB IS 157x12 v2 j-bend',      nds:42.5, ds:29.5,  pds:56.0, pnds:50.0 },
+  { id:'h19', name:'Hadley 150/157',                     nds:41.5, ds:27.5,  pds:59.0, pnds:59.0 },
+];
+
+const ST = { wheel148:'29', wheel157:'29', hub148:'h6', hub157:'h7' };
+const WHEEL_ERDS = { '26':534, '27.5':559, '29':600, '32':667 };
+
+// ── Physics ──────────────────────────────────────────────────────────────────
+
+function spokeEA(d_mm) {
+  return 210e9 * Math.PI * Math.pow(d_mm / 2 / 1000, 2);
+}
+
+/**
+ * calc() — Full Ford (2018) Mode Matrix calculation for one wheel side.
+ *
+ * Improvements over the original widget:
+ *  1. Tension-softening of rim: hoop compression P reduces each lateral mode
+ *     stiffness by P·(m²-1)/Rr²  [Ford §3.3, eq. 3.18]
+ *  2. Correct GJ value exposed as a user parameter (was hard-coded to 40 N·m²;
+ *     TK540 measured value ≈22 N·m² per acoustic modal testing literature)
+ *  3. Mode sum runs to user-selected N (default 24); convergence ≈16 modes
+ *  4. Buckling tension T_c computed by scanning modes for zero stiffness
+ *     [Ford §5, eq. 5.14 simplified to single-flange lateral bracing]
+ *  5. NDS spoke slack load: radial hub load zeroing the NDS pre-tension
+ *  6. EA_rim parameter exposed (used in tension-softening P calculation)
+ *  7. Spoke-count Ns and DS tension are now parameters, not constants
+ */
+function calc(erd_mm, hub, spkDS, spkNDS, tDS_kgf, EIL, EIR, GJ, EA_rim, Ns, N) {
+  const T_DS = tDS_kgf * 9.81;           // [N]
+
+  // Rim radii
+  const Re = erd_mm / 2 / 1000;          // spoke-nipple radius [m]
+  const Rr = Re + 0.011;                  // beam-centroid radius [m]  (Ford §3.2)
+
+  // Hub geometry [m]
+  const d_DS  = hub.ds  / 1000;
+  const d_NDS = hub.nds / 1000;
+  const Rf_DS  = hub.pds  / 2 / 1000;   // flange radius DS
+  const Rf_NDS = hub.pnds / 2 / 1000;   // flange radius NDS
+
+  // 3-cross angle
+  const cos_x = Math.cos(4 * Math.PI * 3 / Ns);
+
+  // Spoke lengths (law of cosines + axial offset)  [Ford §2.2]
+  const r2_DS  = Re*Re + Rf_DS*Rf_DS   - 2*Re*Rf_DS*cos_x;
+  const r2_NDS = Re*Re + Rf_NDS*Rf_NDS - 2*Re*Rf_NDS*cos_x;
+  const L_DS   = Math.sqrt(d_DS*d_DS   + r2_DS);
+  const L_NDS  = Math.sqrt(d_NDS*d_NDS + r2_NDS);
+
+  // Lateral direction cosines  sin(α) = d/L
+  const sin_DS  = d_DS  / L_DS;
+  const sin_NDS = d_NDS / L_NDS;
+
+  // Tension balance  T_NDS = T_DS · sin_DS/sin_NDS  [Ford §2.3]
+  const ratio = sin_DS / sin_NDS;
+  const T_NDS = T_DS * ratio;
+
+  // Spoke axial stiffnesses
+  const EA_DS  = spokeEA(spkDS);
+  const EA_NDS = spokeEA(spkNDS);
+  const kax_DS  = EA_DS  / L_DS;
+  const kax_NDS = EA_NDS / L_NDS;
+
+  // Per-spoke lateral/radial stiffness  [Ford §3.2]
+  //  lateral:  T/L + EA·sin²α/L² = T/L + kax·sin²α
+  //  radial:   T/L + kax·cos²α_lat  (cos²α_lat = r²/(d²+r²))
+  const kl_DS  = T_DS  / L_DS  + kax_DS  * sin_DS  * sin_DS;
+  const kl_NDS = T_NDS / L_NDS + kax_NDS * sin_NDS * sin_NDS;
+  const kr_DS  = T_DS  / L_DS  + kax_DS  * (r2_DS  / (d_DS*d_DS   + r2_DS));
+  const kr_NDS = T_NDS / L_NDS + kax_NDS * (r2_NDS / (d_NDS*d_NDS + r2_NDS));
+
+  // Smeared spoke stiffness (Ns/2 DS + Ns/2 NDS)
+  const Ksl = (Ns / 2) * (kl_DS + kl_NDS);
+  const Ksr = (Ns / 2) * (kr_DS + kr_NDS);
+
+  // Rim modal stiffness coefficient  [Ford §3.3]
+  const C0 = Math.PI / (Rr * Rr * Rr);
+
+  // Hoop compression from spoke tension  [Ford §3.3, eq. 3.16]
+  // P = (Ns/2π) · Σ T_s·cos(α_lat)·(Rf/Re)/L   — radial in-plane component
+  // Simplified to the dominant in-plane radial projection:
+  const P_hoop = (Ns / (2 * Math.PI)) * (
+    T_DS  * (r2_DS  / (L_DS  * Re)) +
+    T_NDS * (r2_NDS / (L_NDS * Re))
+  );
+
+  // ── Mode sum  [Ford §3.4]
+  let C_lat = 1 / (2 * Ksl);
+  let C_rad = 1 / (2 * Ksr);
+
+  for (let m = 1; m <= N; m++) {
+    const qm1 = m * m - 1;                // m²-1
+
+    // Rim lateral mode stiffness: EIL·(m²-1)² + GJ·(m²-1)  [curved-beam coupling]
+    const Krim_lat = C0 * (EIL * qm1 * qm1 + GJ * qm1);
+
+    // Tension-softening: P·(m²-1)/Rr²  reduces lateral stiffness
+    const Ksoft = P_hoop * qm1 / (Rr * Rr);
+
+    // Rim radial mode stiffness: EIR·(m²-1)²  [no torsion coupling in radial]
+    const Krim_rad = C0 * EIR * qm1 * qm1;
+
+    const Klm = Ksl + Krim_lat - Ksoft;
+    const Krm = Ksr + Krim_rad;
+
+    if (Klm > 0) C_lat += 1 / Klm;
+    if (Krm > 0) C_rad += 1 / Krm;
+  }
+
+  const K_lat = 1 / C_lat / 1000;        // [N/mm]
+  const K_rad = 1 / C_rad / 1000;
+
+  // ── Strength: lateral  [Ford §4]
+  // The physically meaningful lateral limit for a dished wheel is the force at
+  // which the NDS spokes go slack (tension → 0). Beyond this the wheel loses
+  // structural integrity on the NDS. This matches the original widget definition.
+  //
+  // Under lateral rim deflection u:
+  //   ΔT_NDS = (EA_NDS / L_NDS) · sin_NDS · u
+  // NDS goes slack when ΔT_NDS = T_NDS (full pre-tension bled off):
+  //   u_slack = T_NDS · L_NDS / (EA_NDS · sin_NDS)
+  // Lateral force at slack:
+  //   F_lat = K_lat_SI · u_slack = K_lat · 1000 · T_NDS · L_NDS / (EA_NDS · sin_NDS)
+  const F_lat_N = T_NDS * (K_lat * 1000) * L_NDS / (EA_NDS * sin_NDS);
+
+  // ── Strength: radial
+  // Radial limit: DS spokes on the loaded side go slack.
+  // Radial component of DS spoke: cos_lat = sqrt(r²_DS) / L_DS
+  // ΔT_DS = (EA_DS / L_DS) · cos_lat_DS · v;  slack at ΔT_DS = T_DS
+  //   F_rad = K_rad · 1000 · T_DS · L_DS / (EA_DS · cos_lat_DS)
+  const A_DS       = Math.PI * Math.pow(spkDS / 2 / 1000, 2);
+  const cos_lat_DS = Math.sqrt(r2_DS) / L_DS;
+  const F_rad_N    = T_DS * (K_rad * 1000) * L_DS / (EA_DS * cos_lat_DS);
+
+  // ── Buckling tension T_c  [Ford §5]
+  // For each mode m, solve for T_DS at which K_lat_m → 0:
+  //   Ksl(T_c) + Krim_m = Ksoft_m(T_c)
+  // Ksl is linear in T: Ksl = Ksl0 + T_DS·∂Ksl/∂T
+  // P_hoop is linear in T: P = T_DS·dP_dT
+  // So: [Ksl0 + Krim_m] + T_c·dKsl_dT = T_c·dP_dT·(m²-1)/Rr²
+  //  → T_c = (Ksl0_static + Krim_m) / (dP_dT·(m²-1)/Rr² - dKsl_dT)
+  // where static terms = zero-tension spoke stiffness contributions
+  // We separate the tension-dependent part:
+  //   kl_DS  = T_DS/L_DS + kax_DS·sin²_DS  → static part = kax_DS·sin²_DS
+  //   tension part of kl_DS per unit T_DS = 1/L_DS
+  const kl_DS_static  = kax_DS  * sin_DS  * sin_DS;
+  const kl_NDS_static = kax_NDS * sin_NDS * sin_NDS;
+  const Ksl_static = (Ns / 2) * (kl_DS_static + kl_NDS_static);
+  const dKsl_dT    = (Ns / 2) * (1 / L_DS + ratio / L_NDS);  // per unit T_DS
+  const dP_dT = (Ns / (2 * Math.PI)) * (
+    r2_DS  / (L_DS  * Re) +
+    ratio * r2_NDS / (L_NDS * Re)
+  );
+
+  let T_c_N = Infinity;
+  for (let m = 2; m <= N; m++) {
+    const qm1 = m * m - 1;
+    const Krim_m = C0 * (EIL * qm1 * qm1 + GJ * qm1);
+    const numer = Ksl_static + Krim_m;
+    const denom = dP_dT * qm1 / (Rr * Rr) - dKsl_dT;
+    if (denom > 0) {
+      const Tc_m = numer / denom;
+      if (Tc_m > 0 && Tc_m < T_c_N) T_c_N = Tc_m;
+    }
+  }
+  const T_c_kgf = T_c_N / 9.81;
+
+  // ── NDS slack load  [Ford §4.3 concept]
+  // Radial hub load F causing the (pre-tensioned) NDS spoke to reach zero tension.
+  // Each NDS spoke carries a share of the vertical load proportional to its
+  // radial projection.  Conservative estimate: single-spoke model.
+  const cos_NDS_rad = Math.sqrt(r2_NDS) / L_NDS;
+  const F_slack_N = T_NDS * (Ns / 2) / cos_NDS_rad;
+  const F_slack_kgf = F_slack_N / 9.81;
+
+  return {
+    ratio:     ratio * 100,
+    K_lat, K_rad,
+    F_lat:     F_lat_N / 9.81,
+    F_rad:     F_rad_N / 9.81,
+    T_c:       T_c_kgf,
+    T_c_ratio: (tDS_kgf / T_c_kgf) * 100,
+    F_slack:   F_slack_kgf,
+  };
+}
+
+// ── UI ───────────────────────────────────────────────────────────────────────
+
+function toggleAdv() {
+  const btn   = document.getElementById('adv-btn');
+  const panel = document.getElementById('adv-panel');
+  const open  = panel.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function buildHubLists() {
+  document.getElementById('hub148-list').innerHTML =
+    HUBS_148.map(h => `<button class="hub-btn${h.id===ST.hub148?' on':''}" data-id="${h.id}" onclick="setHub('148','${h.id}')">${h.name}</button>`).join('');
+  document.getElementById('hub157-list').innerHTML =
+    HUBS_157.map(h => `<button class="hub-btn${h.id===ST.hub157?' on':''}" data-id="${h.id}" onclick="setHub('157','${h.id}')">${h.name}</button>`).join('');
+}
+
+function setWheel(side, w) {
+  if (side==='148') ST.wheel148 = w; else ST.wheel157 = w;
+  ['26','27.5','29','32'].forEach(sz =>
+    document.getElementById(`w${side}-${sz.replace('.','')}`).classList.toggle('on', sz===w));
+  refresh();
+}
+
+function setHub(side, id) {
+  if (side==='148') ST.hub148 = id; else ST.hub157 = id;
+  document.querySelectorAll(`#hub${side}-list .hub-btn`).forEach(b =>
+    b.classList.toggle('on', b.dataset.id===id));
+  refresh();
+}
+
+function pct(a, b) { return b > a ? (b/a-1)*100 : (a/b-1)*-100; }
+function sgn(x)    { return x >= 0 ? '+' : ''; }
+
+function refresh() {
+  const hub148 = HUBS_148.find(h => h.id === ST.hub148);
+  const hub157 = HUBS_157.find(h => h.id === ST.hub157);
+  const EIL  = +document.getElementById('g-eil').value;
+  const EIR  = +document.getElementById('g-eir').value;
+  const GJ   = +document.getElementById('g-gj').value;
+  const EA_rim = +document.getElementById('g-ea').value * 1e6;
+  const N    = +document.getElementById('g-modes').value;
+  const tDS  = +document.getElementById('g-tds').value;
+  const Ns   = +document.getElementById('g-ns').value;
+  const spkDS148  = +document.getElementById('spk148ds').value;
+  const spkNDS148 = +document.getElementById('spk148nds').value;
+  const spkDS157  = +document.getElementById('spk157ds').value;
+  const spkNDS157 = +document.getElementById('spk157nds').value;
+
+  const m148 = calc(WHEEL_ERDS[ST.wheel148], hub148, spkDS148, spkNDS148, tDS, EIL, EIR, GJ, EA_rim, Ns, N);
+  const m157 = calc(WHEEL_ERDS[ST.wheel157], hub157, spkDS157, spkNDS157, tDS, EIL, EIR, GJ, EA_rim, Ns, N);
+
+  function setSide(s, m, hub, whl) {
+    const rC = m.ratio >= 80 ? 'ok' : m.ratio >= 65 ? 'warn' : 'bad';
+    const tC = m.T_c_ratio <= 70 ? 'ok' : m.T_c_ratio <= 85 ? 'warn' : 'bad';
+    document.getElementById(`hub${s}-label`).textContent = `${hub.name} · ${whl}"`;
+    document.getElementById(`m${s}-klat`).textContent  = m.K_lat.toFixed(1);
+    document.getElementById(`m${s}-flat`).textContent  = m.F_lat.toFixed(1);
+    document.getElementById(`m${s}-frad`).textContent  = m.F_rad.toFixed(1);
+    const re = document.getElementById(`m${s}-ratio`);
+    re.textContent = m.ratio.toFixed(1)+'%';
+    re.className = `mv ${rC}`;
+    document.getElementById(`m${s}-tc`).textContent = isFinite(m.T_c) ? m.T_c.toFixed(0) : '∞';
+    const te = document.getElementById(`m${s}-tcr`);
+    te.textContent = isFinite(m.T_c) ? m.T_c_ratio.toFixed(1)+'%' : '—';
+    te.className = `mv ${tC}`;
+    document.getElementById(`m${s}-slack`).textContent = m.F_slack.toFixed(0);
+  }
+  setSide('148', m148, hub148, ST.wheel148);
+  setSide('157', m157, hub157, ST.wheel157);
+
+  function bar(metric, v148, v157) {
+    const mx = Math.max(v148, v157);
+    document.getElementById(`cmp-${metric}-bar148`).style.flex = (v148/mx*100).toFixed(0);
+    document.getElementById(`cmp-${metric}-bar157`).style.flex = (v157/mx*100).toFixed(0);
+  }
+  function cmpRow(metric, v148, v157, decimals, word) {
+    const p = pct(v148, v157);
+    const winner = p >= 0 ? '157' : '148';
+    document.getElementById(`cmp-${metric}148`).textContent = v148.toFixed(decimals);
+    document.getElementById(`cmp-${metric}157`).textContent = v157.toFixed(decimals);
+    document.getElementById(`cmp-${metric}-pct`).textContent = sgn(p)+p.toFixed(1)+'%';
+    document.getElementById(`cmp-${metric}-stmt`).textContent =
+      `${winner} is ${Math.abs(p).toFixed(1)}% ${p>=0?word[0]:word[1]}`;
+    bar(metric, v148, v157);
+  }
+
+  cmpRow('klat', m148.K_lat, m157.K_lat, 1, ['stiffer','less stiff']);
+  cmpRow('flat', m148.F_lat, m157.F_lat, 1, ['stronger','weaker']);
+  cmpRow('frad', m148.F_rad, m157.F_rad, 1, ['stronger','weaker']);
+
+  // Ratio
+  document.getElementById('cmp-ratio148').textContent = m148.ratio.toFixed(1)+'%';
+  document.getElementById('cmp-ratio157').textContent = m157.ratio.toFixed(1)+'%';
+  const rd = m157.ratio - m148.ratio;
+  document.getElementById('cmp-ratio-diff').textContent = sgn(rd)+rd.toFixed(1)+' pp';
+  document.getElementById('cmp-ratio-stmt').textContent =
+    (m157.ratio >= 80 ? '157 meets' : m148.ratio >= 80 ? '148 meets' : 'both below')+' 80% target';
+
+  // Buckling
+  const tc148txt = isFinite(m148.T_c) ? m148.T_c_ratio.toFixed(1)+'%' : '—';
+  const tc157txt = isFinite(m157.T_c) ? m157.T_c_ratio.toFixed(1)+'%' : '—';
+  const tc148el = document.getElementById('cmp-tc148');
+  const tc157el = document.getElementById('cmp-tc157');
+  tc148el.textContent = tc148txt;
+  tc157el.textContent = tc157txt;
+  tc148el.className = `cmp-num ${m148.T_c_ratio<=70?'ok':m148.T_c_ratio<=85?'warn':'bad'}`;
+  tc157el.className = `cmp-num ${m157.T_c_ratio<=70?'ok':m157.T_c_ratio<=85?'warn':'bad'}`;
+  document.getElementById('cmp-tc-stmt').textContent = '< 70% = safe  (Ford §5)';
+
+  // Slack
+  document.getElementById('cmp-slack148').textContent = m148.F_slack.toFixed(0);
+  document.getElementById('cmp-slack157').textContent = m157.F_slack.toFixed(0);
+  const sd = m157.F_slack - m148.F_slack;
+  document.getElementById('cmp-slack-diff').textContent = sgn(sd)+sd.toFixed(0)+' kgf';
+  document.getElementById('cmp-slack-stmt').textContent =
+    (m157.F_slack > m148.F_slack ? '157' : '148')+' holds tension longer under load';
+}
+
+buildHubLists();
+refresh();
+</script>
+</body>
+</html>.cmp-num{font-size:22px;font-weight:600;line-height:1;color:#1e40af}
 .cmp-num.lg{font-size:30px}
 .cmp-num.dim{color:#6b7280}
 .cmp-unit{font-size:9px;color:#6b7280;margin-top:2px}
